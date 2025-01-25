@@ -27,7 +27,7 @@ USD_TO_PLN = 4.02
 PRICING = model_pricings[MODEL]
 EMBEDDING_DIM = 1536
 QDRANT_COLLECTION_NAME = 'dylans_songs'
-session_token_limit = 10_000
+session_token_limit = 20_000
 
 load_dotenv()
 
