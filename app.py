@@ -6,7 +6,7 @@ from langfuse.decorators import observe
 from langfuse.openai import OpenAI
 import os
 
-st.set_page_config(page_title="Spytaj Boba Dylana", layout="centered", menu_items={'About': 'Spytaj Boba Dylana by JK'})
+st.set_page_config(page_title="Zapytaj Boba Dylana", layout="centered", menu_items={'About': 'Zaytaj Boba Dylana by JK'})
 
 model_pricings = {
     "gpt-4o": {
@@ -124,7 +124,7 @@ for message in st.session_state['messages']:
     with st.chat_message(message['role']):
         st.markdown(message['content'])
 
-prompt = st.chat_input('O co chcesz spytać?', max_chars=250)
+prompt = st.chat_input('O co chcesz zapytać?', max_chars=250)
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -140,8 +140,8 @@ if prompt:
         additional_prompt = ""
     with st.chat_message("assistant"):
         response = chatbot_reply(user_prompt=prompt + " " + additional_prompt, memory=st.session_state["messages"][-3:])
-        similarity_message = f"\n\n**Similarity score**: {similarity_score:.4f}"
-        st.markdown(response["content"] + similarity_message)
+        # similarity_message = f"\n\n**Similarity score**: {similarity_score:.4f}"
+        st.markdown(response["content"]) # + similarity_message
 
     st.session_state["messages"].append({"role": "assistant", "content": response["content"], "usage": response["usage"]})
 
@@ -149,7 +149,7 @@ with st.sidebar:
     c1, c2, c3 = st.columns([1,2,1])
     with c2:
         st.image("./pictures/Bob_Dylan_logo_l.png")
-    st.title("Spytaj Boba Dylana")
+    st.title("Zapytaj Boba Dylana")
     # st.write("Aktualne modele AI:")
     # st.write(f"{MODEL}, {EMBEDDING_MODEL}")
 
@@ -194,7 +194,7 @@ Odpowiadaj na pytania w sposób zwięzły i zrozumiały.
                 color: inherit;
             }
             body {
-                padding-bottom: 50px;  /* Zapewnienie miejsca na stopkę */
+                padding-bottom: 50px;
             }
         </style>
     """
