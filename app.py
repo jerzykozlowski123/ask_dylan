@@ -4,6 +4,7 @@ from qdrant_client import QdrantClient
 import streamlit.components.v1 as components
 from langfuse.decorators import observe
 from langfuse.openai import OpenAI
+import os
 
 st.set_page_config(page_title="Spytaj Boba Dylana", layout="centered", menu_items={'About': 'Spytaj Boba Dylana by JK'})
 
@@ -28,17 +29,16 @@ EMBEDDING_DIM = 1536
 QDRANT_COLLECTION_NAME = 'dylans_songs'
 session_token_limit = 10_000
 
-load_dotenv(".env")
-env = dotenv_values(".env")
+load_dotenv()
 
-openai_client = OpenAI(api_key=env["OPENAI_API_KEY"])
+openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 st.title("Spytaj Boba Dylana")
 
 def get_qdrant_client():
     return QdrantClient(
-        url=env["QDRANT_URL"], 
-        api_key=env["QDRANT_API_KEY"],
+        url=os.getenv("QDRANT_URL"), 
+        api_key=os.getenv("QDRANT_API_KEY"),
     )
 
 def assure_db_collection_exists():
