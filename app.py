@@ -33,7 +33,7 @@ load_dotenv()
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-st.title("Spytaj Boba Dylana")
+st.title("Zapytaj Boba Dylana")
 
 def get_qdrant_client():
     return QdrantClient(
