@@ -30,7 +30,6 @@ QDRANT_COLLECTION_NAME = 'dylans_songs'
 session_token_limit = 20_000
 
 load_dotenv()
-
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 st.title("Zapytaj Boba Dylana")
@@ -88,7 +87,7 @@ def chatbot_reply(user_prompt, memory):
         "usage": usage,
     }
 
-@observe(name="create_embedding") 
+# @observe(name="create_embedding") 
 def get_embedding(text):
     result = openai_client.embeddings.create(
         input=[text],
@@ -99,7 +98,7 @@ def get_embedding(text):
     st.session_state['total_tokens_used'] += tokens_used
     return embedding, tokens_used
 
-@observe(name="find_embedding") 
+# @observe(name="find_embedding") 
 def search_similar_song(embedding):
     qdrant_client = get_qdrant_client()
     response = qdrant_client.search(
@@ -152,6 +151,14 @@ with st.sidebar:
     st.title("Zapytaj Boba Dylana")
     # st.write("Aktualne modele AI:")
     # st.write(f"{MODEL}, {EMBEDDING_MODEL}")
+    st.write("""Aplikacja to unikalne narzędzie dla fanów Boba Dylana i miłośników poezji. 
+Dzięki sztucznej inteligencji odpowiada jak ekspert od twórczości Dylana, wplatając cytaty i nawiązując do motywów jego utworów. 
+""")
+    st.write("""To jedynie prototyp pokazujący możliwości technologii. 
+Docelowo aplikacja może działać z najnowszym modelem AI, ucząc się danych o konkretnym biznesie — produktach, procedurach i nie tylko. 
+Pozwoli to na rozmowę z nią jak z przedstawicielem firmy lub doradcą znającym branżę. """)
+    st.write("To połączenie sztuki i technologii otwiera nowe możliwości dla biznesu, inspirując i angażując klientów.")
+
 
     total_cost = 0
     for message in st.session_state["messages"]:
