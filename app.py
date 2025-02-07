@@ -45,20 +45,50 @@ def assure_db_collection_exists():
     if not qdrant_client.collection_exists(QDRANT_COLLECTION_NAME):
         st.write('Błąd połączenia z kolekcją wektorów.')
 
-@observe(name="response") 
-def chatbot_reply(user_prompt, memory):
+@observe(name="classify_prompt")
+def classify_prompt(user_prompt):
+    messages = [
+        {
+            'role': 'system',
+            'content': """Określ, czy pytanie użytkownika można powiązać z twórczością Boba Dylana i jest o filozofii, uczuciach, poezji, muzyce lub o innych tematach życiowych.
+            Odpowiedz tylko "DYLAN" jeśli pytanie jest związane z takimi uduchowionymi tematami, lub "OTHER" dla pozostałych pytań.
+            Przykłady odpowiedzi "DYLAN": 
+            - Jak żyć w dzisiejszym świecie? 
+            - Czy moja kobieta mnie kocha?
+            Przykłady odpowiedzi "OTHER":
+            - Cześć, jak się masz?
+            """
+        },
+        {'role': 'user', 'content': user_prompt}
+    ]
+    
+    response = openai_client.chat.completions.create(
+        model=MODEL,
+        messages=messages
+    )
+    
+    if response.usage:
+        st.session_state['total_tokens_used'] += response.usage.total_tokens
+        
+    return response.choices[0].message.content.strip()
 
+@observe(name="response") 
+def chatbot_reply(user_prompt, memory, include_song=True):
     if st.session_state['total_tokens_used'] >= session_token_limit:
         return {
             "role": "assistant",
             "content": "Przekroczono limit tokenów na sesję.",
             "usage": {}
         }
+    
     # dodaj system message
     messages = [
         {
             'role': 'system',
-            'content': st.session_state['chatbot_personality'],
+            'content': st.session_state['chatbot_personality'] if include_song else """
+            Jesteś pomocnym asystentem, który odpowiada na pytania użytkownika. 
+            Nawet gdy pytanie nie dotyczy bezpośrednio Dylana, zachowujesz charakter poetycki i głębię wypowiedzi, 
+            inspirując się stylem i wrażliwością artystyczną Dylana."""
         },
     ]
     # dodaj wszystkie wiadomości z pamięci
@@ -130,17 +160,33 @@ if prompt:
 
     st.session_state["messages"].append({"role": "user", "content": prompt})
 
-    embedding, tokens_used = get_embedding(prompt)
-    lyrics, title, similarity_score = search_similar_song(embedding)
-
-    if lyrics and title:
-        additional_prompt = f"Bob Dylan, tytuł: {title}, tekst piosenki: {lyrics}"
+    # Klasyfikacja pytania
+    prompt_category = classify_prompt(prompt)
+    
+    if prompt_category == "DYLAN":
+        embedding, tokens_used = get_embedding(prompt)
+        lyrics, title, similarity_score = search_similar_song(embedding)
+        
+        if lyrics and title:
+            additional_prompt = f"Bob Dylan, tytuł: {title}, tekst piosenki: {lyrics}"
+        else:
+            additional_prompt = ""
+            
+        with st.chat_message("assistant"):
+            response = chatbot_reply(
+                user_prompt=prompt + " " + additional_prompt, 
+                memory=st.session_state["messages"][-3:],
+                include_song=True
+            )
+            st.markdown(response["content"])
     else:
-        additional_prompt = ""
-    with st.chat_message("assistant"):
-        response = chatbot_reply(user_prompt=prompt + " " + additional_prompt, memory=st.session_state["messages"][-3:])
-        # similarity_message = f"\n\n**Similarity score**: {similarity_score:.4f}"
-        st.markdown(response["content"]) # + similarity_message
+        with st.chat_message("assistant"):
+            response = chatbot_reply(
+                user_prompt=prompt,
+                memory=st.session_state["messages"][-3:],
+                include_song=False
+            )
+            st.markdown(response["content"])
 
     st.session_state["messages"].append({"role": "assistant", "content": response["content"], "usage": response["usage"]})
 
@@ -180,10 +226,10 @@ Pozwoli to na rozmowę z nią jak z przedstawicielem firmy lub doradcą znający
     components.html(buy_me_a_coffee_button, height=70)
 
     st.session_state['chatbot_personality'] = """
-Jesteś znawcą twórczości Boba Dylana, który odpowiada na wszystkie pytania użytkownika,  
+Jesteś znawcą twórczości Boba Dylana, który odpowiada na wszystkie pytania użytkownika w sposób poetycki i refleksyjny,  
 wplatając w odpowiedź odpowiedni do kontekstu cytat z dołączonej piosenki, podanym tytułem i autorem. 
 Odpowiadaj na pytania w sposób zwięzły i zrozumiały.
-        """
+    """
     st.write("Tłumaczenia pochodzą z https://www.groove.pl/")
 
     # Footer
